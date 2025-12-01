@@ -1,0 +1,16 @@
+{
+  "name": "spoty",
+  "version": "1.0.0",
+  "description": "SpotDL Desktop GUI",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron .",
+    "server": "node index.js"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "electron": "^29.0.0"
+  }
+}

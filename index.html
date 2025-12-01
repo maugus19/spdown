@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>SpotDL GUI</h2>
+
+    <label>URL Playlist:</label><br>
+    <input id="playlist" type="text" size="60"><br><br>
+
+    <label>Carpeta:</label><br>
+    <input id="folder" type="text" size="40" readonly>
+    <button onclick="pick()">Elegir</button><br><br>
+
+    <button onclick="download()">Descargar</button>
+
+    <pre id="log" style="background:#eee;height:300px;overflow-y:scroll;margin-top:20px;"></pre>
+
+    <script>
+      console.log(window.electronAPI);
+        async function pick() {
+          console.log(window.electronAPI);
+            const folder = await window.electronAPI.chooseFolder();
+            if (folder) document.getElementById("folder").value = folder;
+        }
+
+        function download() {
+            const url = document.getElementById("playlist").value;
+            const folder = document.getElementById("folder").value;
+
+            if (!url || !folder) return alert("Complete los campos");
+
+            window.electronAPI.runSpotdl(url, folder);
+        }
+
+        window.electronAPI.onSpotdlLog(msg => {
+            const log = document.getElementById("log");
+            log.textContent += msg + "\n";
+            log.scrollTop = log.scrollHeight;
+        });
+    </script>
+</body>
+</html>
