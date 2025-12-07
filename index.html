@@ -1,41 +1,83 @@
 <!DOCTYPE html>
 <html>
+<head>
+<meta charset="utf-8">
+<title>SpotDL GUI Mejorado</title>
+<link rel="stylesheet" href="styles.css">
+</head>
 <body>
-    <h2>SpotDL GUI</h2>
 
-    <label>URL Playlist:</label><br>
-    <input id="playlist" type="text" size="60"><br><br>
+<h2>SpotDL GUI Mejorado</h2>
 
-    <label>Carpeta:</label><br>
-    <input id="folder" type="text" size="40" readonly>
-    <button onclick="pick()">Elegir</button><br><br>
+<label>Playlist URL:</label><br>
+<input id="playlist" type="text">
+<div id="url-history" class="history-box"></div>
 
-    <button onclick="download()">Descargar</button>
+<br>
 
-    <pre id="log" style="background:#eee;height:300px;overflow-y:scroll;margin-top:20px;"></pre>
+<label>Carpeta de descarga:</label><br>
+<input id="folder" type="text" readonly>
+<button onclick="pick()">Elegir</button>
+<div id="folder-history" class="history-box"></div>
 
-    <script>
-      console.log(window.electronAPI);
-        async function pick() {
-          console.log(window.electronAPI);
-            const folder = await window.electronAPI.chooseFolder();
-            if (folder) document.getElementById("folder").value = folder;
-        }
+<br>
+<button onclick="download()">Descargar</button>
 
-        function download() {
-            const url = document.getElementById("playlist").value;
-            const folder = document.getElementById("folder").value;
+<div id="progress-container">
+  <progress id="progress" value="0" max="100"></progress>
+  <p id="status">Descargadas: 0 — Fallidas: 0</p>
+</div>
 
-            if (!url || !folder) return alert("Complete los campos");
+<h3>Registro de descargas:</h3>
+<pre id="log" style="background:#eee;height:250px;overflow-y:scroll;"></pre>
 
-            window.electronAPI.runSpotdl(url, folder);
-        }
+<script>
+(async () => {
+  const history = await window.electronAPI.getHistory();
 
-        window.electronAPI.onSpotdlLog(msg => {
-            const log = document.getElementById("log");
-            log.textContent += msg + "\n";
-            log.scrollTop = log.scrollHeight;
-        });
-    </script>
+  loadHistoryList("url-history", history.urls, v => document.getElementById("playlist").value = v);
+  loadHistoryList("folder-history", history.folders, v => document.getElementById("folder").value = v);
+})();
+
+function loadHistoryList(id, list, onClick) {
+  const box = document.getElementById(id);
+  box.innerHTML = "";
+  list.forEach(x => {
+    const div = document.createElement("div");
+    div.classList.add("history-item");
+    div.textContent = x;
+    div.onclick = () => onClick(x);
+    box.appendChild(div);
+  });
+}
+
+async function pick() {
+  const folder = await window.electronAPI.chooseFolder();
+  if (folder) document.getElementById("folder").value = folder;
+}
+
+function download() {
+  const url = document.getElementById("playlist").value;
+  const folder = document.getElementById("folder").value;
+  if (!url || !folder) return alert("Complete todos los campos");
+
+  window.electronAPI.runSpotdl(url, folder);
+}
+
+// Logs y progreso
+window.electronAPI.onSpotdlLog(msg => {
+  const log = document.getElementById("log");
+  log.textContent += msg + "\n";
+  log.scrollTop = log.scrollHeight;
+});
+
+window.electronAPI.onProgress(({ downloaded, failed }) => {
+  const total = downloaded + failed;
+  const percent = total ? Math.min(100, (downloaded / total) * 100) : 0;
+  document.getElementById("progress").value = percent;
+  document.getElementById("status").textContent = `Descargadas: ${downloaded} — Fallidas: ${failed}`;
+});
+</script>
+
 </body>
 </html>
